@@ -92,6 +92,20 @@ int neteq_get_last_operator(void) {
     }
     return -1;
 }
+__attribute__ ((visibility ("default")))
+void neteq_set_max_delay(int delay)
+{
+    if (neteq_) {
+        neteq_->SetMaximumDelay(delay);
+    }
+}
+__attribute__ ((visibility ("default")))
+void neteq_set_max_speed(double speed)
+{
+    if (neteq_) {
+        neteq_->SetMaxSpeed(speed);
+    }
+}
 
 #ifdef __cplusplus
 };

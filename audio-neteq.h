@@ -10,6 +10,8 @@ extern "C" {
 	extern int neteq_get_audio(short* data, int channels);
 	extern int neteq_get_buffer_size(void);
 	extern int neteq_get_last_operator(void);
+	extern void neteq_set_max_delay(int delay);
+	extern void neteq_set_max_speed(double speed);
 
 #ifdef __cplusplus
 };

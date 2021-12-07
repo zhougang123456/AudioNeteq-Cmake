@@ -553,6 +553,11 @@ int NetEqImpl::LastOperation() const {
     return (int)last_operation_;
 }
 
+void NetEqImpl::SetMaxSpeed(double speed) const {
+    MutexLock lock(&mutex_);
+    accelerate_->SetMaxSpeed(speed);
+}
+
 const SyncBuffer* NetEqImpl::sync_buffer_for_test() const {
   MutexLock lock(&mutex_);
   return sync_buffer_.get();

@@ -334,6 +334,9 @@ class NetEq {
   virtual int SyncBufferSizeMs() const = 0;
 
   virtual int LastOperation() const = 0;
+
+  virtual void SetMaxSpeed(double speed) const = 0;
+
 };
 
 }  // namespace webrtc

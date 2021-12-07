@@ -46,6 +46,8 @@ class Accelerate : public TimeStretch {
                       AudioMultiVector* output,
                       size_t* length_change_samples);
 
+  void SetMaxSpeed(double speed);
+
  protected:
   // Sets the parameters `best_correlation` and `peak_index` to suitable
   // values when the signal contains no active speech.
@@ -64,6 +66,7 @@ class Accelerate : public TimeStretch {
                                       AudioMultiVector* output) const override;
 
  private:
+  int min_correlation_threshold_ = 8192;
   RTC_DISALLOW_COPY_AND_ASSIGN(Accelerate);
 };
 

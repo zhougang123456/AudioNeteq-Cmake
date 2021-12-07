@@ -43,6 +43,12 @@ void Accelerate::SetParametersForPassiveSpeech(size_t /*len*/,
   *best_correlation = 0;
 }
 
+void Accelerate::SetMaxSpeed(double speed) {
+  if (speed > 0.0 && speed < 2.1) {
+      min_correlation_threshold_ = (int) (16384 / speed); 
+  }
+}
+
 Accelerate::ReturnCodes Accelerate::CheckCriteriaAndStretch(
     const int16_t* input,
     size_t input_length,
@@ -53,7 +59,7 @@ Accelerate::ReturnCodes Accelerate::CheckCriteriaAndStretch(
     AudioMultiVector* output) const {
   // Check for strong correlation or passive speech.
   // Use 8192 (0.5 in Q14) in fast mode.
-  const int correlation_threshold = fast_mode ? 8192 : kCorrelationThreshold;
+  const int correlation_threshold = fast_mode ? min_correlation_threshold_ : kCorrelationThreshold;
   if ((best_correlation > correlation_threshold) || !active_speech) {
     // Do accelerate operation by overlap add.
 
