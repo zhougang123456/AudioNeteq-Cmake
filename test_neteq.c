@@ -4,8 +4,8 @@
 int main() 
 {
     const int kSampleRateHz = 48000;
-    const int kPlayloadType = 96;
-    FILE* pcm = fopen("48.pcm", "rb");
+    const int kPlayloadType = 97;
+    FILE* pcm = fopen("test.pcm", "rb");
     if (pcm == NULL) {
         printf("open pcm file failed!\n");
         return -1;
@@ -13,8 +13,8 @@ int main()
     FILE* outfile = fopen("plc.pcm", "wb");
     while (1) {
 
-
-        if (init_neteq(kSampleRateHz, 1, kPlayloadType) == -1) {
+        NeteqContext* context = init_neteq(kSampleRateHz, 2, kPlayloadType);
+        if (context == NULL) {
             printf("init neteq failed!\n");
             return -1;
         }
@@ -24,16 +24,16 @@ int main()
         const int kFframSizeMs = 10;
         const int kSamples = 480;
 
-        short inputSample[480] = { 0 };
-        short outputSample[480] = { 0 };
+        short inputSample[960] = { 0 };
+        short outputSample[960] = { 0 };
         while (!feof(pcm)) {
-            int read = fread(inputSample, sizeof(short), kSamples, pcm);
+            int read = fread(inputSample, sizeof(short) * 2, kSamples, pcm);
             if (read != kSamples) {
                 printf("read: %d\n", read);
                 break;
             }
             //if (seq_no % 4 != 1) { // test expand and merge
-                if (insert_packet(seq_no, timestamp, inputSample, kSamples) == -1) {
+                if (neteq_insert_packet(context, seq_no, timestamp, inputSample, kSamples) == -1) {
                     printf("neteq insert audio failed!\n");
                     return -1;
                 }
@@ -41,23 +41,24 @@ int main()
             ++seq_no;
             timestamp += kSamples;
 
-            //if (seq_no % 5 == 0) { // test accelerate
-            if (!get_audio(outputSample)) {
+            //if (seq_no % 2 == 0) { // test accelerate
+            if (!neteq_get_audio(context, outputSample)) {
                 printf("neteq get audio failed!\n");
                 return -1;
             }
-
-            fwrite(outputSample, sizeof(short), kSamples, outfile);
+            printf(" opration %d \n", neteq_get_last_operator(context));
+            fwrite(outputSample, sizeof(short) * 2, kSamples, outfile);
             //}
 
         }
-        //while (get_audio(outputSample)) {
-        //    fwrite(outputSample, sizeof(short), kSamples, outfile);
-        //    
-        //}
+        while (neteq_get_audio(context, outputSample)) {
+            printf(" opration %d \n", neteq_get_last_operator(context));
+            fwrite(outputSample, sizeof(short) * 2, kSamples, outfile);
+            
+        }
         
         fseek(pcm, 0, SEEK_SET);
-        clear_neteq();
+        clear_neteq(context);
     }
     fflush(outfile);
     fclose(outfile);

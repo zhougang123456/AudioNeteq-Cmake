@@ -1,17 +1,27 @@
-add_definitions(-DWEBRTC_LINUX)
-add_definitions(-DWEBRTC_POSIX)
+cmake_minimum_required(VERSION 3.23)
+
+project(webrtc-neteq)
+
 add_definitions(-DRTC_DISABLE_LOGGING)
 add_definitions(-DWEBRTC_USE_BUILTIN_ISAC_FIX)
 add_definitions(-DRTC_DISABLE_TRACE_EVENTS)
 add_definitions(-DRTC_DISABLE_METRICS)
 add_definitions(-DRTC_DISABLE_CHECK_MSG)
 
-set(WEBRTC_PROJECT_NAME "webrtc")
+if (CMAKE_HOST_WIN32)
+add_definitions(-DWEBRTC_WIN)
+add_definitions(-DNOMINMAX)
+add_definitions(-D_CRT_SECURE_NO_WARNINGS)
+endif ()
+if (CMAKE_HOST_UNIX)
+add_definitions(-DWEBRTC_LINUX)
+add_definitions(-DWEBRTC_POSIX)
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -pthread -O2 -Wall -fPIC -fno-rtti")  #设置c++的编译选项
+endif ()
 
 set (
     DIR_CLINK_WEBRTC_SRCS
-    ${CMAKE_CURRENT_SOURCE_DIR}/audio-neteq.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/audio-neteq.cc
     # absl
     ${CMAKE_CURRENT_SOURCE_DIR}/absl/base/internal/throw_delegate.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/absl/strings/ascii.cc
@@ -25,10 +35,10 @@ set (
     ${CMAKE_CURRENT_SOURCE_DIR}/rtc_base/time_utils.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/rtc_base/system_time.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/rtc_base/string_encode.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/rtc_base/zero_memory.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/rtc_base/experiments/field_trial_parser.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/rtc_base/experiments/struct_parameters_parser.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/rtc_base/experiments/field_trial_list.cc
-    ${CMAKE_CURRENT_SOURCE_DIR}/rtc_base/experiments/field_trial_units.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/rtc_base/experiments/field_trial_units.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/rtc_base/strings/audio_format_to_string.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/rtc_base/strings/string_builder.cc
@@ -139,13 +149,39 @@ set (
     CACHE INTERNAL "clink werbrtc source dir"
 )
 
-add_library(${WEBRTC_PROJECT_NAME} SHARED ${DIR_CLINK_WEBRTC_SRCS})
+add_library(${PROJECT_NAME} SHARED ${DIR_CLINK_WEBRTC_SRCS})
+
+if (CMAKE_HOST_WIN32)
+target_link_libraries(${PROJECT_NAME} winmm.lib)
+endif ()
+
 target_include_directories(
-            ${WEBRTC_PROJECT_NAME} 
+            ${PROJECT_NAME} 
             PUBLIC 
             ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
-target_link_libraries (${WEBRTC_PROJECT_NAME} -lstdc++)
+add_executable(test 
+               ${CMAKE_CURRENT_SOURCE_DIR}/test_neteq.c
+	       )
 
-install(TARGETS ${WEBRTC_PROJECT_NAME} DESTINATION  /usr/local/lib/)
+if (CMAKE_HOST_WIN32)
+target_link_libraries(test 
+					  winmm.lib 
+					  ${CMAKE_CURRENT_SOURCE_DIR}/build/$(Configuration)/webrtc-neteq.lib)
+set_target_properties(test PROPERTIES VS_DEBUGGER_ENVIRONMENT "PATH=${CMAKE_CURRENT_SOURCE_DIR}/build/$(Configuration)")
+endif ()
+
+if (CMAKE_HOST_UNIX)
+target_link_libraries(test
+                      webrtc-neteq
+                      )
+endif ()
+
+target_include_directories(
+            test 
+            PUBLIC 
+            ${CMAKE_CURRENT_SOURCE_DIR}
+)
+
+add_dependencies(test ${PROJECT_NAME})
