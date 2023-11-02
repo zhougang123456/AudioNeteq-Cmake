@@ -7,6 +7,7 @@ add_definitions(-DWEBRTC_USE_BUILTIN_ISAC_FIX)
 add_definitions(-DRTC_DISABLE_TRACE_EVENTS)
 add_definitions(-DRTC_DISABLE_METRICS)
 add_definitions(-DRTC_DISABLE_CHECK_MSG)
+add_definitions(-DWEBRTC_USE_BUILTIN_OPUS)
 
 if (CMAKE_HOST_WIN32)
 add_definitions(-DWEBRTC_WIN)
@@ -36,6 +37,7 @@ set (
     ${CMAKE_CURRENT_SOURCE_DIR}/rtc_base/system_time.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/rtc_base/string_encode.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/rtc_base/zero_memory.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/rtc_base/string_to_number.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/rtc_base/experiments/field_trial_parser.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/rtc_base/experiments/struct_parameters_parser.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/rtc_base/experiments/field_trial_list.cc
@@ -145,20 +147,35 @@ set (
     ${CMAKE_CURRENT_SOURCE_DIR}/modules/audio_coding/codecs/pcm16b/pcm16b.c
     ${CMAKE_CURRENT_SOURCE_DIR}/modules/audio_coding/codecs/pcm16b/pcm16b_common.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/modules/audio_coding/codecs/pcm16b/audio_decoder_pcm16b.cc
-
+    # opus
+    ${CMAKE_CURRENT_SOURCE_DIR}/api/audio_codecs/opus/audio_decoder_opus.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/api/audio_codecs/opus/audio_decoder_multi_channel_opus.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/modules/audio_coding/codecs/opus/audio_coder_opus_common.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/modules/audio_coding/codecs/opus/audio_decoder_multi_channel_opus_impl.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/modules/audio_coding/codecs/opus/audio_decoder_opus_impl.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/modules/audio_coding/codecs/opus/opus_interface.cc
     CACHE INTERNAL "clink werbrtc source dir"
 )
 
 add_library(${PROJECT_NAME} SHARED ${DIR_CLINK_WEBRTC_SRCS})
 
+add_subdirectory(third_party/opus)
+
 if (CMAKE_HOST_WIN32)
-target_link_libraries(${PROJECT_NAME} winmm.lib)
+target_link_libraries(
+            ${PROJECT_NAME} 
+            winmm.lib
+            ${CMAKE_CURRENT_SOURCE_DIR}/build/third_party/opus/$(Configuration)/opus.lib
+)
 endif ()
+
+add_dependencies(${PROJECT_NAME} opus)
 
 target_include_directories(
             ${PROJECT_NAME} 
             PUBLIC 
             ${CMAKE_CURRENT_SOURCE_DIR}
+            ${CMAKE_CURRENT_SOURCE_DIR}/third_party/opus/include
 )
 
 add_executable(test 

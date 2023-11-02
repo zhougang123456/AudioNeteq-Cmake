@@ -4,12 +4,12 @@
 int main() 
 {
     const int kSampleRateHz = 48000;
-    const int kPlayloadType = 97;
-    FILE* pcm = fopen("test.pcm", "rb");
+    const int kPlayloadType = 111;//97;
+   /* FILE* pcm = fopen("test.pcm", "rb");
     if (pcm == NULL) {
         printf("open pcm file failed!\n");
         return -1;
-    }
+    }*/
     FILE* outfile = fopen("plc.pcm", "wb");
     while (1) {
 
@@ -24,16 +24,17 @@ int main()
         const int kFframSizeMs = 10;
         const int kSamples = 480;
 
-        short inputSample[960] = { 0 };
+        short inputSample[100] = { 0 };//[960] = { 0 };
         short outputSample[960] = { 0 };
-        while (!feof(pcm)) {
-            int read = fread(inputSample, sizeof(short) * 2, kSamples, pcm);
+        int kPlayloadSize = 200;
+        while (1) {//(!feof(pcm)) {
+            /*int read = fread(inputSample, sizeof(short) * 2, kSamples, pcm);
             if (read != kSamples) {
                 printf("read: %d\n", read);
                 break;
-            }
+            }*/
             //if (seq_no % 4 != 1) { // test expand and merge
-                if (neteq_insert_packet(context, seq_no, timestamp, inputSample, kSamples) == -1) {
+                if (neteq_insert_packet(context, seq_no, timestamp, inputSample, kSamples, kPlayloadType, kPlayloadSize) == -1) {
                     printf("neteq insert audio failed!\n");
                     return -1;
                 }
@@ -57,11 +58,11 @@ int main()
             
         }
         
-        fseek(pcm, 0, SEEK_SET);
+        //fseek(pcm, 0, SEEK_SET);
         clear_neteq(context);
     }
     fflush(outfile);
     fclose(outfile);
-    fclose(pcm);
+    //fclose(pcm);
     return 0;
 }

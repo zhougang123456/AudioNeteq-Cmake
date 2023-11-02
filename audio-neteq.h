@@ -8,7 +8,7 @@ extern "C" {
 #ifdef WEBRTC_WIN
 	__declspec (dllexport) NeteqContext* init_neteq(int sample_rate, int channels, int encode_type);
 	__declspec (dllexport) void clear_neteq(NeteqContext* context);
-	__declspec (dllexport) int neteq_insert_packet(NeteqContext* context, int seq_no, int timestamp, short* data, int samples);
+	__declspec (dllexport) int neteq_insert_packet(NeteqContext* context, int seq_no, int timestamp, short* data, int samples, int encode_type, int size);
 	__declspec (dllexport) int neteq_get_audio(NeteqContext* context, short* data);
 	__declspec (dllexport) int neteq_get_delay_time(NeteqContext* context, int timestamp);
 	__declspec (dllexport) int neteq_get_last_operator(NeteqContext* context);
@@ -18,7 +18,7 @@ extern "C" {
 #else
 	extern NeteqContext* init_neteq(int sample_rate, int channels, int encode_type);
 	extern void clear_neteq(NeteqContext* context);
-	extern int neteq_insert_packet(NeteqContext* context, int seq_no, int timestamp, short* data, int samples);
+	extern int neteq_insert_packet(NeteqContext* context, int seq_no, int timestamp, short* data, int samples, int encode_type, int size);
 	extern int neteq_get_audio(NeteqContext* context, short* data);
 	extern int neteq_get_delay_time(NeteqContext* context, int timestamp);
 	extern int neteq_get_last_operator(NeteqContext* context);

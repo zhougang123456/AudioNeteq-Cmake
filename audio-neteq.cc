@@ -32,9 +32,26 @@ extern "C" {
         if (context->neteq_ == nullptr) {
             return nullptr;
         }
-        if (!context->neteq_->RegisterPayloadType(encode_type, SdpAudioFormat("l16", sample_rate, channels, { {"stereo", "0"} }))) {
-            return nullptr;
+        switch (encode_type)
+        {
+        case 97:
+        {
+            if (!context->neteq_->RegisterPayloadType(
+                    encode_type, SdpAudioFormat("l16", sample_rate, channels, { {"stereo", "0"} }))) {
+                return nullptr;
+            }
         }
+        case 111:
+        {
+            if (!context->neteq_->RegisterPayloadType(
+                encode_type, SdpAudioFormat("opus", sample_rate, channels, { {"stereo", "0"} }))) {
+                return nullptr;
+            }
+        }
+        default:
+            break;
+        }
+        
         context->neteq_->EnableNack(128);
         return context;
     }
@@ -46,17 +63,19 @@ extern "C" {
             free(context);
         }
     }
-    int neteq_insert_packet(NeteqContext* context, int seq_no, int timestamp, short* data, int samples)
+    int neteq_insert_packet(NeteqContext* context, int seq_no, int timestamp, short* data, int samples, int encode_type, int size)
     {   
         if (context) {
-            size_t payload_len = WebRtcPcm16b_Encode(data, samples * 2, (uint8_t*)data);
+            if (encode_type == 97) {
+                WebRtcPcm16b_Encode(data, samples * 2, (uint8_t*)data);
+            }
             RTPHeader rtp_info;
             rtp_info.sequenceNumber = seq_no;
             rtp_info.timestamp = timestamp;
             rtp_info.ssrc = 0x1234;
-            rtp_info.payloadType = 97;
+            rtp_info.payloadType = encode_type;
             rtp_info.markerBit = 0;
-            if (context->neteq_->InsertPacket(rtp_info, rtc::ArrayView<const uint8_t>((uint8_t*)data, payload_len)) == -1) {
+            if (context->neteq_->InsertPacket(rtp_info, rtc::ArrayView<const uint8_t>((uint8_t*)data, size)) == -1) {
                 return -1;
             }
             return 0;
